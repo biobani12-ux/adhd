@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Focus — ADHD Productivity</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --card:#fff; --ink:#111; --muted:#777;
+    --line:#e5e5e2; --soft:#f0f0ed; --black:#111;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:82px}
+  header{padding:26px 20px 12px;display:flex;align-items:center;justify-content:space-between}
+  h1{font-size:29px;margin:0 0 3px;letter-spacing:-1px}
+  .date{font-size:13px;color:var(--muted)}
+  .icon-btn{width:42px;height:42px;border:0;border-radius:50%;background:#111;color:white;font-size:22px}
+  .content{padding:10px 18px}
+  .voice-box{background:#111;color:white;border-radius:22px;padding:22px;margin-bottom:18px}
+  .voice-box small{opacity:.7}
+  .voice-row{display:flex;gap:12px;align-items:center;margin-top:15px}
+  .mic{width:56px;height:56px;border:0;border-radius:50%;background:#fff;color:#111;font-size:22px}
+  .task-input{flex:1;background:#242424;border:1px solid #444;color:#fff;border-radius:14px;padding:14px}
+  .task-input::placeholder{color:#aaa}
+  .section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 3px 10px;font-weight:700}
+  .link{border:0;background:none;color:var(--muted);font-size:13px}
+  .task{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;margin:9px 0;display:flex;gap:12px;align-items:center}
+  .check{width:23px;height:23px;border:1.5px solid #999;border-radius:50%;background:white;flex:none}
+  .task.done .check{background:#111;position:relative}
+  .task.done .check:after{content:"✓";color:#fff;position:absolute;left:4px;top:0px;font-size:14px}
+  .task.done .name{text-decoration:line-through;color:#999}
+  .task-main{min-width:0;flex:1}.name{font-weight:600}.meta{font-size:12px;color:var(--muted);margin-top:4px}
+  .modify-btn{border:1px solid #ddd;background:#fff;border-radius:10px;padding:8px 9px;font-size:12px;white-space:nowrap}.timer-btn{border:0;background:#111;color:#fff;border-radius:11px;padding:9px 10px;font-size:12px}
+  .empty{padding:30px;text-align:center;color:var(--muted);background:white;border:1px dashed #ddd;border-radius:17px}
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);height:70px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:10}
+  nav button{background:none;border:0;color:#888;font-size:11px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center}
+  nav button.active{color:#111;font-weight:700}.nav-icon{font-size:19px}
+  .screen{display:none}.screen.active{display:block}
+  .sheet{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;z-index:20}
+  .sheet.show{display:flex}
+  .panel{background:white;width:100%;max-width:430px;margin:auto auto 0;border-radius:28px 28px 0 0;padding:22px 20px 30px;max-height:90vh;overflow:auto}
+  .panel h2{margin:0 0 18px}
+  label{font-size:12px;color:var(--muted);display:block;margin:14px 0 6px}
+  input,select{width:100%;max-width:100%;min-width:0;padding:13px;border:1px solid #ddd;border-radius:12px;background:white;box-sizing:border-box}
+  .row{display:flex;flex-direction:column;gap:0}.row>*{width:100%;min-width:0}
+  .row input,.row select{display:block;width:100%;max-width:100%;min-width:0}
+  .row > div{width:100%;min-width:0}
+  @media (min-width:520px){
+    .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  }
+
+  .primary{width:100%;padding:14px;border:0;background:#111;color:white;border-radius:13px;margin-top:18px;font-weight:700}
+  .secondary{width:100%;padding:13px;border:1px solid #ddd;background:white;border-radius:13px;margin-top:9px}
+  .choice-row{display:flex;gap:8px}.choice{flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:12px}.choice.selected{background:#111;color:#fff}
+  .break-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .break-card{background:white;border:1px solid var(--line);border-radius:18px;padding:22px 12px;text-align:center;min-height:105px}
+  .break-card b{display:block;margin-top:10px}.break-card span{font-size:12px;color:var(--muted)}
+  .break-card.play-card.locked{opacity:.48;cursor:not-allowed;background:#f5f5f5}
+  .break-card.play-card.locked .break-icon{filter:grayscale(1)}
+  .break-card.play-card.unlocked{border-color:#111}
+  .break-card .break-icon{font-size:30px;line-height:1}
+
+  .wordle-sheet .panel{padding-bottom:24px;touch-action:pan-y;width:100%;max-width:430px;box-sizing:border-box;overflow-x:hidden;overscroll-behavior:contain}
+  .wordle-head{display:flex;align-items:center;justify-content:space-between}
+  .wordle-head h2{margin:0}
+  .wordle-close{border:0;background:#f2f2f2;width:40px;height:40px;border-radius:50%;font-size:26px;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  .wordle-board{display:grid;grid-template-rows:repeat(6,1fr);gap:6px;max-width:300px;margin:20px auto}
+  .wordle-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .wordle-tile{aspect-ratio:1;border:2px solid #d8d8d5;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:800;text-transform:uppercase}
+  .wordle-tile.filled{border-color:#999}
+  .wordle-tile.correct{background:#2f9e44;color:#fff;border-color:#2f9e44}
+  .wordle-tile.present{background:#e0ad00;color:#fff;border-color:#e0ad00}
+  .wordle-tile.absent{background:#bdbdbd;color:#fff;border-color:#bdbdbd}
+  .wordle-status{text-align:center;min-height:20px;font-size:13px;font-weight:600;margin:8px 0 12px}
+  .wordle-keyboard{display:grid;gap:5px;width:min(100%,350px);margin:0 auto;box-sizing:border-box;overflow:hidden;touch-action:manipulation}
+  .wordle-keyrow{display:grid;width:100%;box-sizing:border-box;gap:4px}
+  .wordle-keyrow:nth-child(1){grid-template-columns:repeat(10,minmax(0,1fr))}
+  .wordle-keyrow:nth-child(2){grid-template-columns:repeat(9,minmax(0,1fr));padding:0 4.5%}
+  .wordle-keyrow:nth-child(3){grid-template-columns:48px repeat(7,minmax(0,1fr)) 48px}
+  .wordle-key{border:0;background:#e8e8e5;border-radius:7px;min-width:0;width:100%;height:42px;padding:0;font-size:12px;font-weight:700;box-sizing:border-box;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  .wordle-key.wide{min-width:0;width:100%;font-size:9px}
+  .wordle-key.correct{background:#2f9e44!important;color:#fff!important}
+  .wordle-key.present{background:#e0ad00!important;color:#fff!important}
+  .wordle-key.absent{background:#bdbdbd!important;color:#fff!important}
+  @media(max-width:390px){
+    .wordle-keyboard{width:100%;max-width:350px}
+    .wordle-key{height:40px;font-size:11px}
+    .wordle-key.wide{font-size:8px}
+    .wordle-keyrow:nth-child(3){grid-template-columns:45px repeat(7,minmax(0,1fr)) 45px}
+  }
+  .wordle-new{margin-top:14px!important;display:none}
+  .greeting-wrap{min-width:0}
+  .greeting-line{display:flex;align-items:center;gap:7px}
+  .edit-name-btn{border:0;background:transparent;color:#999;font-size:17px;padding:4px 2px;line-height:1;touch-action:manipulation}
+  .cat-stage{position:relative;height:74px;margin:0 18px 8px;background:white;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .cat-bed{position:absolute;right:18px;bottom:10px;width:72px;height:19px;background:#eee;border-radius:14px 14px 7px 7px}
+  .cat{position:absolute;left:24%;bottom:14px;font-size:30px;line-height:1;z-index:2;transform-origin:center bottom}
+  .cat-ball{position:absolute;left:43%;bottom:12px;font-size:16px;z-index:1}
+  .cat.playing{animation:catPlay 2.7s ease-in-out infinite}
+  .cat-ball.playing{animation:ballPlay 2.7s ease-in-out infinite}
+  .cat.happy{animation:catJump .75s ease-in-out 2}
+  .cat.tired{left:auto;right:27px;bottom:17px;transform:rotate(90deg);animation:catSleep .8s ease-in forwards}
+  .cat-purr{position:absolute;right:25px;bottom:3px;font-size:11px;color:#777;opacity:0;letter-spacing:.4px}
+  .cat-purr.show{opacity:1;animation:purrPulse 1.4s ease-in-out infinite}
+  .cat-stage.all-done .cat-ball{display:none}
+  @keyframes catPlay{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(26px) rotate(-5deg)}50%{transform:translateX(52px) rotate(4deg)}75%{transform:translateX(25px) rotate(-3deg)}}
+  @keyframes ballPlay{0%,100%{transform:translate(0,0)}25%{transform:translate(25px,-10px)}50%{transform:translate(48px,0)}75%{transform:translate(22px,-5px)}}
+  @keyframes catJump{0%{transform:translateY(0)}45%{transform:translateY(-22px) rotate(-8deg)}100%{transform:translateY(0)}}
+  @keyframes catSleep{0%{transform:rotate(90deg) scale(1)}100%{transform:rotate(90deg) scale(.96)}}
+  @keyframes purrPulse{0%,100%{opacity:.35}50%{opacity:1}}
+  .calendar{background:white;border:1px solid var(--line);border-radius:20px;padding:16px}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+  .cal-nav{width:32px;height:32px;border:0;background:#f2f2f0;border-radius:50%;font-size:22px;line-height:1}
+  .days{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:#888}
+  .dates{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px}
+  .date-cell{min-height:45px;padding:7px 2px;text-align:center;border-radius:9px;font-size:12px;position:relative;border:1px solid transparent;touch-action:manipulation}
+  .date-cell.today{background:#111;color:#fff}
+  .date-cell.selected{border-color:#111}
+  .date-cell.has-events:after{content:"";position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:currentColor}
+  .date-cell.today.has-events:after{background:#fff}
+  .calendar-selected-label{font-weight:700;margin-top:18px}
+  .event{margin-top:9px;padding:13px;background:#f4f4f1;border-radius:12px;font-size:13px}
+  .event-time{font-weight:700;margin-right:6px}
+  .break-activity-panel{padding-bottom:28px}
+  .activity-timer{font-size:48px;font-weight:800;text-align:center;letter-spacing:-2px;margin:20px 0}
+  .activity-center{text-align:center}
+  .breath-orb{width:145px;height:145px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;margin:24px auto;font-weight:700;animation:breathPulse 8s ease-in-out infinite}
+  @keyframes breathPulse{0%,100%{transform:scale(.78)}50%{transform:scale(1.05)}}
+  .stretch-step{font-size:25px;font-weight:800;text-align:center;margin:24px 0 8px}
+  .stretch-hint{text-align:center;color:#777;min-height:40px}
+  .walk-progress{height:10px;background:#eee;border-radius:10px;overflow:hidden;margin:20px 0}.walk-progress i{display:block;height:100%;width:0;background:#111}
+  .doodle-canvas{width:100%;height:300px;border:1px solid #ddd;border-radius:16px;touch-action:none;background:#fff;display:block}
+  .activity-note{text-align:center;color:#777;font-size:13px;line-height:1.45}
+  .routine{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--line);padding:14px;border-radius:15px;margin:8px 0}
+  .routine button{margin-left:auto;border:0;background:#111;color:#fff;width:30px;height:30px;border-radius:50%}.routine-actions{margin-left:auto;display:flex;gap:6px}.routine-actions button{margin:0;border:1px solid #ddd;background:white;color:#111;width:32px;height:32px;border-radius:50%}.routine-actions .add{background:#111;color:#fff;border-color:#111}.routine-empty{padding:28px 10px;text-align:center;color:#777}.break-return{display:block;background:#111;color:#fff;border-radius:15px;padding:16px;margin:0 0 14px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.12)}.break-return.waiting{background:#f3f3f3;color:#111;box-shadow:none}.break-return .primary{background:#fff;color:#111;margin-top:12px}.break-return.waiting .primary{display:none}.break-return b{display:block;margin-bottom:4px}.break-return span{font-size:12px;opacity:.75}
+  .timer-screen{text-align:center;padding:35px 18px}
+  .timer-title{font-size:24px;font-weight:700;margin-top:15px}
+  .circle{width:245px;height:245px;border:13px solid #111;border-right-color:#ddd;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:35px auto 25px}
+  .time{font-size:52px;font-weight:700;letter-spacing:-3px}
+  .timer-controls{display:flex;justify-content:center;gap:10px}
+  .timer-controls button{border:1px solid #ddd;background:white;border-radius:50%;width:55px;height:55px}
+  .timer-controls .main{background:#111;color:#fff;width:68px;height:68px;font-size:20px}
+  .progress{height:7px;background:#eee;border-radius:8px;overflow:hidden}.progress>i{display:block;height:100%;background:#111;width:0}
+  .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:12px;display:none;z-index:50;font-size:13px}
+  .welcome-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1000;display:flex;align-items:flex-end}.welcome-card{background:#fff;width:100%;border-radius:28px 28px 0 0;padding:30px 24px 34px;box-sizing:border-box}.welcome-kicker{font-size:11px;letter-spacing:1.5px;color:#777;font-weight:700;margin-bottom:12px}.welcome-card h2{font-size:30px;margin:0 0 10px}.welcome-card p{color:#777;line-height:1.45;margin:0 0 22px}.welcome-card input{font-size:18px;margin-bottom:12px}.day-timeline{margin:18px 0 24px;padding:14px 14px 16px;background:#f4f4f4;border-radius:16px}.timeline-head{display:flex;justify-content:space-between;gap:10px;font-size:10px;letter-spacing:1.1px;font-weight:700;color:#777;margin-bottom:13px}.timeline-head span:last-child{letter-spacing:0;text-transform:none;font-weight:600}.timeline-track{height:34px;position:relative;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e3e3e3}.timeline-hour{position:absolute;top:0;bottom:0;border-left:1px solid #eee}.timeline-hour-label{position:absolute;top:7px;transform:translateX(-50%);font-size:9px;color:#aaa}.timeline-block{position:absolute;top:5px;height:24px;background:#111;border-radius:7px;min-width:5px}.timeline-now{position:absolute;top:0;bottom:0;width:2px;background:#777;z-index:4}@media(min-width:700px){.welcome-overlay{align-items:center;justify-content:center}.welcome-card{width:430px;border-radius:24px}}
+
+  .sheet-head{display:flex;align-items:center;justify-content:space-between}
+  .sheet-head h2{margin:0}
+  .close-sheet{border:0;background:#f2f2f2;width:40px;height:40px;border-radius:50%;font-size:28px;line-height:1}
+  .modify-actions{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .danger{width:100%;padding:15px;border:1px solid #ddd;border-radius:14px;background:#fff;color:#b00020;font-weight:700;font-size:16px}
+  html,body{max-width:100%;overflow-x:hidden}
+
+
+  /* Wordle mobile containment */
+  .sheet.wordle-sheet{
+    position:fixed;
+    inset:0;
+    width:100vw;
+    max-width:100vw;
+    box-sizing:border-box;
+    overflow-x:hidden;
+    overflow-y:auto;
+    padding:0;
+    touch-action:manipulation;
+  }
+  .sheet.wordle-sheet .panel{
+    width:100%;
+    max-width:520px;
+    margin:0 auto;
+    box-sizing:border-box;
+    overflow-x:hidden;
+  }
+  .wordle-board{
+    width:min(100%,320px);
+    max-width:calc(100vw - 80px);
+    margin-left:auto;
+    margin-right:auto;
+    box-sizing:border-box;
+  }
+  .wordle-status,.wordle-sheet .panel > .date,
+  .wordle-sheet .panel > div[style]{
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  .wordle-keyboard{
+    width:min(100%,350px);
+    max-width:calc(100vw - 80px);
+    margin-left:auto;
+    margin-right:auto;
+    box-sizing:border-box;
+  }
+  .wordle-keyrow{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <section id="home" class="screen active">
+    <header><div class="greeting-wrap"><div class="greeting-line"><h1 id="greeting">Today</h1><button class="edit-name-btn" id="editNameBtn" aria-label="Change name">✎</button></div><div class="date" id="todayLabel"></div></div><button class="icon-btn" id="addBtn">+</button></header>
+    <div class="cat-stage" id="catStage" aria-label="Your focus cat">
+      <div class="cat playing" id="focusCat">🐈</div><div class="cat-ball playing" id="focusBall">●</div>
+      <div class="cat-bed"></div><div class="cat-purr" id="catPurr">purr… purr…</div>
+    </div>
+    <div class="content">
+      <div class="voice-box">
+        <small>QUICK ADD</small>
+        <div style="font-size:19px;font-weight:700;margin-top:5px">What needs to get done?</div>
+        <div class="voice-row">
+          <button class="mic" id="voiceBtn">●</button>
+          <input class="task-input" id="quickInput" placeholder='e.g. "Clean kitchen for 20 min"'>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:10px">Tap the mic and say: “Clean kitchen for 20 minutes at 6 PM.”</div>
+      </div>
+<div class="day-timeline" id="dayTimeline"><div class="timeline-head"><span>YOUR DAY</span><span id="timelineSummary">No time blocked yet</span></div><div class="timeline-track" id="timelineTrack"></div></div>
+            <div class="section-title"><span>Today's tasks</span><button class="link" id="clearDone">Clear done</button></div>
+      <div id="taskList"></div>
+    </div>
+  </section>
+
+  <section id="routines" class="screen">
+    <header><div><h1>Routines</h1><div class="date">Things you do again and again</div></div><button class="icon-btn" id="routineAdd">+</button></header>
+    <div class="content">
+      <div class="choice-row" id="routineFilter">
+        <button class="choice selected" data-f="Daily">Daily</button><button class="choice" data-f="Weekly">Weekly</button><button class="choice" data-f="Biweekly">Biweekly</button><button class="choice" data-f="Monthly">Monthly</button>
+      </div>
+      <div class="choice-row" style="margin-top:8px">
+        <button class="choice" data-f="Quarterly">Quarterly</button><button class="choice" data-f="Yearly">Yearly</button>
+      </div>
+      <div id="routineList"></div>
+    </div>
+  </section>
+
+  <section id="calendar" class="screen">
+    <header><div><h1>Calendar</h1><div class="date">See what is waiting for you.</div></div><button class="icon-btn" id="calendarAdd">+</button></header>
+    <div class="content">
+      <div class="calendar">
+        <div class="cal-head">
+          <button class="cal-nav" id="prevMonth" aria-label="Previous month">‹</button>
+          <b id="monthTitle"></b>
+          <button class="cal-nav" id="nextMonth" aria-label="Next month">›</button>
+        </div>
+        <div class="days"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+        <div class="dates" id="dates"></div>
+        <div class="calendar-selected-label" id="selectedDateLabel"></div>
+        <div id="events"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="break" class="screen">
+    <header><div><h1>Take a break</h1><div class="date">Rest is part of the plan.</div></div></header>
+    <div class="content">
+      <div class="break-return waiting" id="breakReturn"><b id="breakReturnTitle">No paused timer</b><span id="breakReturnText">Start a task timer, then use “Take a break” to pause it here.</span><button class="primary" id="returnToFocus" style="margin-top:12px">Return to timer</button></div>
+      <div class="break-grid">
+        <button class="break-card play-card" data-kind="wordle" data-min="5" data-requires-complete="true">
+          <div class="break-icon">🟩</div><b>Wordle</b><span>Finish today’s tasks to unlock</span>
+        </button>
+        <button class="break-card" data-kind="walk" data-min="10">
+          <div class="break-icon">🚶</div><b>Walk</b><span>10 min</span>
+        </button>
+        <button class="break-card play-card" data-kind="doodle" data-min="5" data-requires-complete="true">
+          <div class="break-icon">🎨</div><b>Doodle</b><span>Finish today’s tasks to unlock</span>
+        </button>
+        <button class="break-card" data-kind="lofi" data-min="15">
+          <div class="break-icon">🎧</div><b>Lo-fi music</b><span>15 min</span>
+        </button>
+        <button class="break-card" data-kind="breathing" data-min="3">
+          <div class="break-icon">🫁</div><b>Breathing</b><span>3 min</span>
+        </button>
+        <button class="break-card" data-kind="stretch" data-min="5">
+          <div class="break-icon">🧘</div><b>Stretch</b><span>5 min</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="sheet wordle-sheet" id="wordleSheet">
+  <div class="panel">
+    <div class="wordle-head"><h2>Wordle</h2><button class="wordle-close" id="closeWordle">×</button></div>
+    <div class="date" style="margin-top:4px">Find the 5-letter word in 6 tries.</div>
+    <div class="wordle-board" id="wordleBoard"></div>
+    <div class="wordle-status" id="wordleStatus">Type a 5-letter word.</div>
+    <div style="text-align:center;font-size:11px;color:#777;margin-bottom:12px">GREEN = right place · YELLOW = wrong place · GREY = not in word</div>
+    <div class="wordle-keyboard" id="wordleKeyboard"></div>
+    <button class="primary wordle-new" id="newWordle">New word</button>
+  </div>
+</div>
+
+  <section id="focus" class="screen">
+    <div class="timer-screen">
+      <button class="link" id="closeFocus" style="float:left;font-size:22px">×</button>
+      <div class="date" id="focusStep"></div>
+      <div class="timer-title" id="focusTitle">Focus</div><div class="meta" style="margin-top:7px">Finish this step, then the next one appears automatically.</div>
+      <div class="circle"><div class="time" id="timerText">10:00</div></div>
+      <div class="timer-controls"><button id="minus">−5</button><button class="main" id="pause">▶</button><button id="plus">+5</button></div>
+      <div style="margin-top:25px;text-align:left"><div class="progress"><i id="timerProgress"></i></div></div>
+      <button class="primary" id="finishNow">Complete task</button>
+      <button class="secondary" id="breakFromFocus">Take a break</button>
+    </div>
+  </section>
+
+  <div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><div class="welcome-kicker">LET'S MAKE TODAY EASIER</div><h2>What should I call you?</h2><p>Your name is saved on this device so you won't have to enter it again.</p><input id="userNameInput" autocomplete="given-name" placeholder="Your first name"><button class="primary" id="saveUserName">Continue</button></div></div>
+
+<nav>
+    <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Today</button>
+    <button data-screen="routines"><span class="nav-icon">↻</span>Routines</button>
+    <button data-screen="calendar"><span class="nav-icon">□</span>Calendar</button>
+    <button data-screen="break"><span class="nav-icon">☕</span>Break</button>
+  </nav>
+</div>
+
+<div class="sheet" id="routineSheet">
+  <div class="panel">
+    <div class="sheet-head"><h2>Add routine</h2><button class="close-sheet" id="closeRoutine">×</button></div>
+    <label>What do you repeat?</label>
+    <input id="routineName" placeholder="e.g. Prepare Lily for school">
+    <div class="row">
+      <div><label>Repeat</label>
+        <select id="routineFreq"><option>Daily</option><option>Weekly</option><option>Biweekly</option><option>Monthly</option><option>Quarterly</option><option>Yearly</option></select>
+      </div>
+      <div><label>Duration (minutes)</label><input id="routineDuration" type="number" min="1" step="1" value="15"></div>
+    </div>
+    <label>Start date</label><input id="routineStart" type="date">
+    <button class="primary" id="saveRoutine">Add routine</button>
+    <button class="secondary" id="cancelRoutine">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet" id="taskSheet">
+  <div class="panel">
+    <h2>Add a task</h2>
+    <label>Task</label><input id="taskName" placeholder="What do you want to do?">
+    <div class="row"><div><label>Date</label><input id="taskDate" type="date"><label>When</label><input id="taskWhen" type="time"></div><div><label>Duration</label><select id="taskDuration"><option>5</option><option>10</option><option selected>15</option><option>20</option><option>30</option><option>45</option><option>60</option><option>90</option></select></div></div>
+    <label>How should I handle it?</label>
+    <div class="choice-row"><button class="choice selected" id="keepTask">One task</button><button class="choice" id="breakTask">Break into steps</button></div>
+    <label>Repeat</label><select id="taskRepeat"><option>Does not repeat</option><option>Daily</option><option>Weekly</option><option>Biweekly</option><option>Monthly</option><option>Annually</option></select>
+    <button class="primary" id="saveTask">Add task</button><button class="secondary" id="cancelSheet">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet" id="modifySheet">
+  <div class="panel">
+    <div class="sheet-head">
+      <h2>Modify task</h2>
+      <button class="close-sheet" id="closeModify">×</button>
+    </div>
+
+    <label>Task</label>
+    <input id="modifyName" type="text">
+
+    <label>Date</label>
+    <input id="modifyDate" type="date">
+
+    <label>When</label>
+    <input id="modifyWhen" type="time">
+
+    <label>Duration</label>
+    <select id="modifyDuration">
+      <option>5</option><option>10</option><option>15</option>
+      <option>20</option><option>30</option><option>45</option>
+      <option>60</option><option>90</option>
+    </select>
+
+    <label>How should I handle it?</label>
+    <div class="choice-row">
+      <button class="choice" id="modifyKeep">One task</button>
+      <button class="choice" id="modifyBreak">Break into steps</button>
+    </div>
+
+    <label>Repeat</label>
+    <select id="modifyRepeat">
+      <option>Does not repeat</option>
+      <option>Daily</option><option>Weekly</option>
+      <option>Biweekly</option><option>Monthly</option><option>Annually</option>
+    </select>
+
+    <div class="modify-actions">
+      <button class="primary" id="saveModify">Save changes</button>
+      <button class="danger" id="deleteModify">Delete task</button>
+      <button class="secondary" id="cancelModify">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="breakdownSheet">
+  <div class="panel">
+    <h2>Break it down</h2>
+    <div id="breakdownContent"></div>
+    <button class="primary" id="addSteps">Add steps to task</button>
+    <button class="secondary" id="cancelBreakdown">Keep as one task</button>
+  </div>
+</div>
+
+<div class="sheet" id="calendarSheet">
+  <div class="panel">
+    <h2>Schedule a task</h2>
+    <label>Task</label><input id="calTask" placeholder="e.g. Doctor appointment">
+    <div class="row"><div><label>Date</label><input id="calDate" type="date"></div><div><label>Time</label><input id="calTime" type="time"></div></div>
+    <label>Repeat</label><select id="calRepeat"><option>Does not repeat</option><option>Daily</option><option>Weekly</option><option>Biweekly</option><option>Monthly</option><option>Annually</option></select>
+    <button class="primary" id="saveCalendar">Schedule</button><button class="secondary" id="cancelCalendar">Cancel</button>
+  </div>
+</div>
+<div class="sheet" id="nameSheet">
+  <div class="panel">
+    <div class="sheet-head"><h2>Change your name</h2><button class="close-sheet" id="closeNameSheet">×</button></div>
+    <label>Name</label>
+    <input id="changeNameInput" autocomplete="given-name" placeholder="Your name">
+    <button class="primary" id="saveChangedName">Save name</button>
+    <button class="secondary" id="cancelChangedName">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet break-activity-sheet" id="breakActivitySheet">
+  <div class="panel break-activity-panel">
+    <div class="sheet-head"><h2 id="breakActivityTitle">Break</h2><button class="close-sheet" id="closeBreakActivity">×</button></div>
+    <div id="breakActivityContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const TASKS_KEY = "adhdAppTasks_v1";
+const NAME_KEY = "adhdAppUserName_v1";
+
+const defaultTasks = [
+  {id:1,name:"Drop Lily at bus",when:"08:15",duration:15,done:false,taskDate:new Date().toISOString().slice(0,10)},
+  {id:2,name:"Client status update",when:"11:00",duration:30,done:false,taskDate:new Date().toISOString().slice(0,10)},
+  {id:3,name:"Walk",when:"17:00",duration:20,done:false,taskDate:new Date().toISOString().slice(0,10)}
+];
+
+function loadTasks(){
+  try{
+    const saved=localStorage.getItem(TASKS_KEY);
+    if(saved){
+      const parsed=JSON.parse(saved);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  }catch(e){}
+  return defaultTasks;
+}
+
+let tasks = loadTasks();
+
+function saveTasks(){
+  try{
+    localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  }catch(e){
+    console.warn("Could not save tasks",e);
+  }
+}
+  const ROUTINES_KEY = "adhdAppRoutines_v1";
+  const defaultRoutines = [
+    {id:1,name:"Drop kid at bus",icon:"🚌",freq:"Daily",duration:15,startDate:new Date().toISOString().slice(0,10)},
+    {id:2,name:"House cleaning",icon:"⌂",freq:"Weekly",duration:60,startDate:new Date().toISOString().slice(0,10)},
+    {id:3,name:"Cooking",icon:"○",freq:"Daily",duration:45,startDate:new Date().toISOString().slice(0,10)},
+    {id:4,name:"Night time prep",icon:"☾",freq:"Daily",duration:20,startDate:new Date().toISOString().slice(0,10)},
+    {id:5,name:"Laundry",icon:"□",freq:"Weekly",duration:30,startDate:new Date().toISOString().slice(0,10)},
+    {id:6,name:"Meal planning",icon:"▤",freq:"Monthly",duration:30,startDate:new Date().toISOString().slice(0,10)}
+  ];
+  function loadRoutines(){
+    try{const saved=localStorage.getItem(ROUTINES_KEY);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))return parsed;}}catch(e){}
+    return defaultRoutines;
+  }
+  let routines = loadRoutines();
+  function saveRoutines(){try{localStorage.setItem(ROUTINES_KEY,JSON.stringify(routines));}catch(e){console.warn("Could not save routines",e);}}
+  saveRoutines();
+  let events = [];
+  let breakdownTarget = null;
+  let focusTask = null;
+  let focusStepIndex = 0;
+  let remaining = 600, total = 600, timer = null;
+  let pausedFocus = null;
+  try{ pausedFocus = JSON.parse(localStorage.getItem("adhdAppPausedFocus_v1") || "null"); }catch(e){ pausedFocus=null; }
+
+  const pad=n=>String(n).padStart(2,"0");
+  const showToast=t=>{ $("toast").textContent=t; $("toast").style.display="block"; setTimeout(()=>$("toast").style.display="none",1800); };
+
+  $("todayLabel").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short"});
+  function todayTaskStatus(){
+    const today=todayISO();
+    const todayTasks=tasks.filter(t=>(t.taskDate||today)===today);
+    return {
+      hasTasks: todayTasks.length>0,
+      allDone: todayTasks.length>0 && todayTasks.every(t=>t.done)
+    };
+  }
+
+  function updateBreakAccess(){
+    const status=todayTaskStatus();
+    document.querySelectorAll('.break-card[data-requires-complete="true"]').forEach(card=>{
+      const locked=!status.allDone;
+      card.classList.toggle("locked",locked);
+      card.classList.toggle("unlocked",!locked);
+      card.setAttribute("aria-disabled",locked?"true":"false");
+      const span=card.querySelector("span");
+      if(span){
+        span.textContent=locked
+          ? (status.hasTasks ? "Finish today’s tasks to unlock" : "Add today’s tasks first")
+          : `${card.dataset.min} min`;
+      }
+    });
+  }
+
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    $(id).classList.add("active");
+    document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.screen===id));
+    if(id==="routines") renderRoutines("Daily");
+    if(id==="calendar") renderCalendar();
+    if(id==="break"){
+      let hasPausedTimer=!!focusTask && remaining>0 && !focusTask.done;
+      if(!hasPausedTimer && pausedFocus){
+        const restored=tasks.find(t=>t.id===pausedFocus.taskId);
+        if(restored && !restored.done){
+          focusTask=restored;
+          focusStepIndex=Number(pausedFocus.stepIndex||0);
+          remaining=Number(pausedFocus.remaining||0);
+          total=Number(pausedFocus.total||remaining);
+          hasPausedTimer=remaining>0;
+        }
+      }
+      const card=$("breakReturn");
+      card.classList.toggle("waiting",!hasPausedTimer);
+      $("returnToFocus").style.display=hasPausedTimer?"inline-flex":"none";
+      $("breakReturnTitle").textContent=hasPausedTimer?"Timer paused":"No paused timer";
+      if(hasPausedTimer){
+        const mins=Math.floor(remaining/60), secs=remaining%60;
+        $("breakReturnText").textContent=`${focusTask.name} · ${pad(mins)}:${pad(secs)} remaining`;
+      }else{
+        $("breakReturnText").textContent="Start a task timer, then use “Take a break” to pause it here.";
+      }
+    }
+  }
+  document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
+
+  function taskMinutes(t){ if(!t.when) return 24*60+1; const p=t.when.split(":"); return Number(p[0])*60+Number(p[1]); }
+  function taskDateTimeKey(t){ return `${t.taskDate || todayISO()} ${t.when || "23:59"}`; }
+  function renderDayTimeline(sortedTasks){ const track=$("timelineTrack"); if(!track)return; track.innerHTML=""; const startHour=6,endHour=24,span=(endHour-startHour)*60; for(let hour=startHour;hour<=endHour;hour+=3){const pct=((hour-startHour)*60/span)*100; const line=document.createElement("div"); line.className="timeline-hour"; line.style.left=pct+"%"; if(hour<24){const lab=document.createElement("div");lab.className="timeline-hour-label";lab.textContent=hour===12?"12 PM":(hour<12?hour+" AM":(hour-12)+" PM");line.appendChild(lab)} track.appendChild(line)} const timed=sortedTasks.filter(t=>(t.taskDate||todayISO())===todayISO()&&t.when&&!t.done); timed.forEach(t=>{const mins=taskMinutes(t),left=Math.max(0,Math.min(100,((mins-startHour*60)/span)*100)),width=Math.max(1,Math.min(100-left,(Number(t.duration||15)/span)*100));const b=document.createElement("div");b.className="timeline-block";b.style.left=left+"%";b.style.width=width+"%";b.title=`${t.name} · ${t.when} · ${t.duration} min`;track.appendChild(b)}); const now=new Date(),nowMin=now.getHours()*60+now.getMinutes(); if(nowMin>=startHour*60&&nowMin<=endHour*60){const n=document.createElement("div");n.className="timeline-now";n.style.left=((nowMin-startHour*60)/span*100)+"%";track.appendChild(n)} const total=timed.reduce((sum,t)=>sum+Number(t.duration||0),0);$("timelineSummary").textContent=timed.length?`${timed.length} task${timed.length>1?"s":""} · ${total} min blocked`:"No time blocked yet"; }
+
+  function formatTime(value){
+    if(!value) return "";
+    const [hh,mm]=value.split(":").map(Number);
+    const suffix=hh>=12?"PM":"AM";
+    const h=(hh%12)||12;
+    return `${h}:${String(mm).padStart(2,"0")} ${suffix}`;
+  }
+
+  function formatTaskDate(value){
+    if(!value || value===todayISO()) return "Today";
+    const d=new Date(value+"T12:00:00");
+    const tomorrow=new Date();
+    tomorrow.setHours(12,0,0,0);
+    tomorrow.setDate(tomorrow.getDate()+1);
+    if(value===isoDate(tomorrow)) return "Tomorrow";
+    return d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+  }
+
+  let modifyingTask = null;
+  let modifySplit = false;
+
+  function openModify(t){
+    modifyingTask=t;
+    $("modifyName").value=t.name || "";
+    $("modifyDate").value=t.taskDate || todayISO();
+    $("modifyWhen").value=t.when || "";
+    $("modifyDuration").value=String([5,10,15,20,30,45,60,90].includes(Number(t.duration)) ? t.duration : 15);
+    $("modifyRepeat").value=t.repeat || "Does not repeat";
+
+    modifySplit=!!(t.steps && t.steps.length);
+    $("modifyKeep").classList.toggle("selected",!modifySplit);
+    $("modifyBreak").classList.toggle("selected",modifySplit);
+
+    $("modifySheet").classList.add("show");
+  }
+
+  function closeModify(){
+    modifyingTask=null;
+    $("modifySheet").classList.remove("show");
+  }
+
+  $("modifyKeep").onclick=()=>{
+    modifySplit=false;
+    $("modifyKeep").classList.add("selected");
+    $("modifyBreak").classList.remove("selected");
+  };
+
+  $("modifyBreak").onclick=()=>{
+    modifySplit=true;
+    $("modifyBreak").classList.add("selected");
+    $("modifyKeep").classList.remove("selected");
+  };
+
+  $("saveModify").onclick=()=>{
+    if(!modifyingTask) return;
+
+    const name=$("modifyName").value.trim();
+    if(!name){
+      showToast("Add a task name first.");
+      return;
+    }
+
+    modifyingTask.name=name;
+    modifyingTask.taskDate=$("modifyDate").value || todayISO();
+    modifyingTask.when=$("modifyWhen").value || "";
+    modifyingTask.duration=Math.max(1,Number($("modifyDuration").value)||15);
+    modifyingTask.repeat=$("modifyRepeat").value;
+
+    if(!modifySplit){
+      delete modifyingTask.steps;
+    }else if(!modifyingTask.steps || !modifyingTask.steps.length){
+      breakdownTarget=modifyingTask;
+      closeModify();
+      renderBreakdown(modifyingTask);
+      $("breakdownSheet").classList.add("show");
+      return;
+    }
+
+    saveTasks();
+    closeModify();
+    renderTasks();
+    showToast("Task updated");
+  };
+
+  $("deleteModify").onclick=()=>{
+    if(!modifyingTask) return;
+    const index=tasks.indexOf(modifyingTask);
+    if(index>-1) tasks.splice(index,1);
+    saveTasks();
+    closeModify();
+    renderTasks();
+    showToast("Task deleted");
+  };
+
+  $("closeModify").onclick=closeModify;
+  $("cancelModify").onclick=closeModify;
+
+
+  function renderTasks(){ const box=$("taskList");box.innerHTML="";const sorted=[...tasks].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));renderDayTimeline(sorted);if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>';return;}sorted.forEach(t=>{const el=document.createElement("div");el.className="task"+(t.done?" done":"");el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min${t.steps?` · ${t.steps.length} steps`:""}</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;el.querySelector(".check").addEventListener("click",()=>{t.done=!t.done;saveTasks();renderTasks()});el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
+      el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));box.appendChild(el)}); updateBreakAccess(); }
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  function getGreeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Hi there":"Good evening";}
+  function setupIdentity(){let saved=localStorage.getItem(NAME_KEY);
+    if(!saved){
+      const legacy=localStorage.getItem("adhdAppUserName");
+      if(legacy){ saved=legacy; localStorage.setItem(NAME_KEY,legacy); }
+    }
+    const overlay=$("welcomeOverlay"),input=$("userNameInput");if(saved){$("greeting").textContent=`${getGreeting()}, ${saved}`;overlay.style.display="none";}else{overlay.style.display="flex";setTimeout(()=>input.focus(),100)}$("saveUserName").onclick=()=>{const name=input.value.trim();if(!name)return;localStorage.setItem(NAME_KEY,name);localStorage.setItem("adhdAppUserName",name);$("greeting").textContent=`${getGreeting()}, ${name}`;overlay.style.display="none"};input.addEventListener("keydown",e=>{if(e.key==="Enter")$("saveUserName").click()})}
+  setupIdentity();
+  saveTasks();
+  renderTasks();
+
+  function openSheet(){ $("taskDate").value = $("taskDate").value || todayISO(); $("taskSheet").classList.add("show"); $("taskName").focus(); }
+  function closeSheet(){ stopVoiceInput(); $("taskSheet").classList.remove("show"); }
+  $("addBtn").addEventListener("click",openSheet);
+  $("cancelSheet").addEventListener("click",closeSheet);
+  // Real browser voice input using the Web Speech API.
+  // Chrome/Edge expose SpeechRecognition; Safari commonly exposes webkitSpeechRecognition.
+  let recognition = null;
+  let listening = false;
+  function stopVoiceInput(){if(recognition){try{recognition.stop()}catch(e){}} listening=false;$("voiceBtn").textContent="●";$("voiceBtn").style.background="#fff";$("voiceBtn").setAttribute("aria-label","Start voice input");}
+
+  function parseVoiceTask(text){
+    let clean = text.trim();
+    let duration = 15;
+    let when = "";
+    let taskDate = todayISO();
+
+    // Relative date phrases.
+    const relativeDatePatterns = [
+      { re:/\bday after tomorrow\b/i, days:2 },
+      { re:/\bafter\s+two\s+days?\b/i, days:2 },
+      { re:/\bin\s+two\s+days?\b/i, days:2 },
+      { re:/\btomorrow\b/i, days:1 },
+      { re:/\bnext\s+day\b/i, days:1 },
+      { re:/\bin\s+one\s+day\b/i, days:1 },
+      { re:/\btoday\b/i, days:0 }
+    ];
+
+    for (const item of relativeDatePatterns) {
+      const match = clean.match(item.re);
+      if (match) {
+        const d = new Date();
+        d.setHours(12,0,0,0);
+        d.setDate(d.getDate() + item.days);
+        taskDate = isoDate(d);
+        clean = clean.replace(match[0], " ");
+        break;
+      }
+    }
+
+    // Explicit dates: "on Oct 8", "on 8 Oct", "October 8".
+    const monthNames = "january|february|march|april|may|june|july|august|september|october|november|december";
+    const explicitDate = clean.match(
+      new RegExp("\\b(?:on\\s+)?(\\d{1,2})\\s+(" + monthNames + ")\\b|\\b(?:on\\s+)?(" + monthNames + ")\\s+(\\d{1,2})\\b", "i")
+    );
+    if (explicitDate) {
+      let day, monthName;
+      if (explicitDate[1]) {
+        day = Number(explicitDate[1]);
+        monthName = explicitDate[2];
+      } else {
+        monthName = explicitDate[3];
+        day = Number(explicitDate[4]);
+      }
+      const month = new Date(`${monthName} 1, 2000`).getMonth();
+      const now = new Date();
+      let year = now.getFullYear();
+      let d = new Date(year, month, day, 12,0,0,0);
+      if (d < new Date(now.getFullYear(), now.getMonth(), now.getDate())) year++;
+      d = new Date(year, month, day, 12,0,0,0);
+      taskDate = isoDate(d);
+      clean = clean.replace(explicitDate[0], " ");
+    }
+
+    const durationPatterns = [
+      /\bfor\s+(\d+)\s*(?:minutes?|mins?|min)\b/i,
+      /\b(\d+)\s*(?:minutes?|mins?|min)\b/i
+    ];
+    for (const pattern of durationPatterns) {
+      const match = clean.match(pattern);
+      if (match) {
+        duration = Number(match[1]);
+        clean = clean.replace(match[0], " ");
+        break;
+      }
+    }
+
+    const timeMatch = clean.match(/\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+    if (timeMatch) {
+      let hour = Number(timeMatch[1]);
+      const minute = timeMatch[2] || "00";
+      const meridiem = timeMatch[3] ? timeMatch[3].toLowerCase() : "";
+      if (meridiem === "pm" && hour < 12) hour += 12;
+      if (meridiem === "am" && hour === 12) hour = 0;
+      when = `${String(hour).padStart(2,"0")}:${minute}`;
+      clean = clean.replace(timeMatch[0], " ");
+    }
+
+    if (!when) {
+      const looseTime = clean.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+      if (looseTime) {
+        let hour = Number(looseTime[1]);
+        const minute = looseTime[2] || "00";
+        const meridiem = looseTime[3].toLowerCase();
+        if (meridiem === "pm" && hour < 12) hour += 12;
+        if (meridiem === "am" && hour === 12) hour = 0;
+        when = `${String(hour).padStart(2,"0")}:${minute}`;
+        clean = clean.replace(looseTime[0], " ");
+      }
+    }
+
+    clean = clean.replace(/\s+/g," ").trim().replace(/\s+([,.!?])$/,"$1");
+    clean = clean.replace(/^(please\s+)/i,"");
+
+    return {name:clean || text.trim(), duration, when, taskDate};
+  }
+
+  function todayISO(){
+    return isoDate(new Date());
+  }
+
+  function isoDate(d){
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+
+  function fillTaskFormFromText(text){
+    const parsed = parseVoiceTask(text);
+    $("taskName").value = parsed.name;
+    const allowed = [5,10,15,20,30,45,60,90];
+    $("taskDuration").value = String(allowed.includes(parsed.duration) ? parsed.duration : 15);
+
+    // iOS Safari requires a strict HH:mm value for <input type="time">.
+    if (parsed.when && /^\d{2}:\d{2}$/.test(parsed.when)) {
+      $("taskWhen").value = parsed.when;
+    } else {
+      $("taskWhen").value = "";
+    }
+    $("taskDate").value = parsed.taskDate || todayISO();
+    openSheet();
+  }
+
+  function setupRecognition(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SpeechRecognition){
+      showToast("Voice input isn't supported in this browser. Try Chrome or Safari.");
+      return null;
+    }
+    const r = new SpeechRecognition();
+    r.lang = "en-IN";
+    r.interimResults = true;
+    r.continuous = false;
+
+    r.onstart = ()=>{
+      listening = true;
+      $("voiceBtn").textContent = "■";
+      $("voiceBtn").style.background = "#ddd";
+      $("voiceBtn").setAttribute("aria-label","Stop listening");
+      showToast("Listening…");
+    };
+
+    r.onresult = (event)=>{
+      let transcript = "";
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        transcript += event.results[i][0].transcript;
+      }
+      $("quickInput").value = transcript;
+    };
+
+    r.onerror = (event)=>{
+      listening = false;
+      $("voiceBtn").textContent = "●";
+      $("voiceBtn").style.background = "#fff";
+      if(event.error === "not-allowed" || event.error === "service-not-allowed"){
+        showToast("Microphone permission was blocked. Allow mic access and try again.");
+      } else if(event.error === "no-speech"){
+        showToast("I didn't hear anything. Try again.");
+      } else {
+        showToast("Voice input failed. You can type the task instead.");
+      }
+    };
+
+    r.onend = ()=>{
+      listening = false;
+      $("voiceBtn").textContent = "●";
+      $("voiceBtn").style.background = "#fff";
+      $("voiceBtn").setAttribute("aria-label","Start voice input");
+
+      const text = $("quickInput").value.trim();
+      if(text){
+        fillTaskFormFromText(text);
+      }
+    };
+    return r;
+  }
+
+  $("voiceBtn").addEventListener("click",()=>{
+    if(listening && recognition){
+      recognition.stop();
+      return;
+    }
+    recognition = setupRecognition();
+    if(recognition){
+      try { recognition.start(); }
+      catch(e) { showToast("Microphone is already active. Try again in a moment."); }
+    }
+  });
+
+  $("quickInput").addEventListener("keydown",e=>{
+    if(e.key==="Enter"){
+      const text=e.target.value.trim(); if(!text)return;
+      fillTaskFormFromText(text);
+      e.target.value="";
+    }
+  });
+
+  let split=false;
+  $("keepTask").onclick=()=>{split=false;toggleChoices()};
+  $("breakTask").onclick=()=>{split=true;toggleChoices()};
+  function toggleChoices(){
+    $("keepTask").classList.toggle("selected",!split);
+    $("breakTask").classList.toggle("selected",split);
+  }
+  $("saveTask").onclick=()=>{stopVoiceInput();
+    const name=$("taskName").value.trim(); if(!name){showToast("Add a task name first.");return;}
+    const duration=Number($("taskDuration").value);
+    const t={id:Date.now(),name,when:$("taskWhen").value,duration,done:false,repeat:$("taskRepeat").value,taskDate:$("taskDate").value || todayISO()};
+    if(split){breakdownTarget=t; closeSheet(); renderBreakdown(t); $("breakdownSheet").classList.add("show");}
+    else {tasks.push(t);saveTasks();closeSheet();renderTasks();showToast("Task added.");}
+    $("taskName").value="";
+  };
+  function generateSmartSteps(task){
+    const raw = task.name.trim();
+    const s = raw.toLowerCase();
+
+    // Task-specific patterns. These are deliberately action-oriented:
+    // each step should tell the user what to physically do next.
+    if (/\b(call|phone|ring)\b/.test(s) && /\b(dr|doctor|dentist|clinic|hospital)\b/.test(s)) {
+      return [
+        ["Find the doctor's/clinic's phone number", 3],
+        ["Call and say why you're calling", 3],
+        ["Give the details they need", 4],
+        ["Confirm the appointment, advice, or next step", 3],
+        ["Save the appointment/details somewhere you'll see them", 2]
+      ];
+    }
+
+    if (/\b(call|phone|ring)\b/.test(s)) {
+      return [
+        [`Find the number for ${raw.replace(/\b(call|phone|ring)\b/i,"").trim() || "the person"}`, 3],
+        ["Make the call and state the reason clearly", 4],
+        ["Handle the main question or request", 5],
+        ["Confirm what happens next", 3],
+        ["Note down anything you need to remember", 2]
+      ];
+    }
+
+    if (/\b(email|mail|message|text|whatsapp)\b/.test(s)) {
+      return [
+        ["Open the conversation or create a new message", 2],
+        ["Write the main point in one or two sentences", 5],
+        ["Add any details or attachments needed", 3],
+        ["Read it once for mistakes", 2],
+        ["Send it", 1]
+      ];
+    }
+
+    if (/\b(clean|cleaning|tidy|organize|declutter)\b/.test(s)) {
+      return [
+        ["Choose one small area to start with", 2],
+        ["Collect obvious rubbish and put it away", 5],
+        ["Put misplaced things back in their homes", 7],
+        ["Clean the main surfaces", 7],
+        ["Stop when the timer ends and reset the area", 4]
+      ];
+    }
+
+    if (/\b(cook|cooking|make|prepare)\b/.test(s)) {
+      return [
+        ["Choose the dish and check what ingredients you have", 4],
+        ["Take out the ingredients and utensils", 4],
+        ["Prep the ingredients", 8],
+        ["Cook the dish", 12],
+        ["Plate/store the food and clean the main utensils", 7]
+      ];
+    }
+
+    if (/\b(grocery|groceries|shopping)\b/.test(s)) {
+      return [
+        ["Check what is already at home", 5],
+        ["Make a short shopping list", 5],
+        ["Group the list by section", 3],
+        ["Shop only from the list", 15],
+        ["Put everything away when you get home", 7]
+      ];
+    }
+
+    if (/\b(report|presentation|ppt|document|assignment|project)\b/.test(s)) {
+      return [
+        ["Write down what the finished result needs to contain", 5],
+        ["Gather the information or files you already have", 8],
+        ["Create a rough first version without polishing it", 12],
+        ["Fill the important gaps", 10],
+        ["Review, fix, and submit/share it", 8]
+      ];
+    }
+
+    if (/\b(book|appointment|reservation|schedule)\b/.test(s)) {
+      return [
+        ["Open the booking or appointment website/app", 3],
+        ["Choose the date and time", 4],
+        ["Enter the required details", 5],
+        ["Confirm the booking", 2],
+        ["Save the confirmation somewhere easy to find", 2]
+      ];
+    }
+
+    // Fallback is still task-specific instead of generic life advice.
+    return [
+      [`Define what “${raw}” being finished looks like`, 3],
+      [`Gather what you need for “${raw}”`, 4],
+      [`Do the first small piece of “${raw}”`, Math.max(5, Math.round(task.duration * .35))],
+      [`Finish the remaining work for “${raw}”`, Math.max(5, Math.round(task.duration * .25))],
+      ["Do a 30-second finish check", 1]
+    ];
+  }
+
+  function renderBreakdown(t){
+    const parts = generateSmartSteps(t);
+    const totalSuggested = parts.reduce((sum,p)=>sum+p[1],0);
+    $("breakdownContent").innerHTML =
+      `<div style="font-weight:700;margin-bottom:5px">${escapeHtml(t.name)}</div>
+       <div class="meta" style="margin-bottom:14px">Small actions, in the order you can actually do them.</div>` +
+      parts.map((p,i)=>`
+        <div class="task">
+          <span style="color:#999">${i+1}</span>
+          <div class="task-main">
+            <div class="name">${escapeHtml(p[0])}</div>
+            <div class="meta">${p[1]} min</div>
+          </div>
+        </div>`).join("") +
+      `<div class="meta" style="margin-top:10px">
+        Suggested total: ${totalSuggested} min · You can adjust this later.
+      </div>`;
+
+    t.steps = parts.map(p=>({name:p[0],duration:p[1]}));
+  }
+
+  $("addSteps").onclick=()=>{stopVoiceInput();tasks.push(breakdownTarget);saveTasks();closeBreakdown();renderTasks();showToast("Task broken into steps.");};
+  $("cancelBreakdown").onclick=()=>{stopVoiceInput();tasks.push({...breakdownTarget,steps:undefined});saveTasks();closeBreakdown();renderTasks();};
+  function closeBreakdown(){$("breakdownSheet").classList.remove("show");}
+
+  function currentFocusStep(){
+    if(!focusTask || !focusTask.steps || !focusTask.steps.length) return null;
+    return focusTask.steps[focusStepIndex] || null;
+  }
+
+  function openFocus(t){
+    focusTask=t;
+    focusStepIndex=0;
+
+    const step=currentFocusStep();
+    const minutes=step ? Number(step.duration) : Number(t.duration);
+    remaining=Math.max(60, minutes*60);
+    total=remaining;
+
+    updateFocusHeader();
+    updateTimer();
+    showScreen("focus");
+  }
+
+  function updateFocusHeader(){
+    const step=currentFocusStep();
+
+    if(step){
+      $("focusStep").textContent=`Step ${focusStepIndex+1} of ${focusTask.steps.length}`;
+      $("focusTitle").textContent=step.name;
+      $("finishNow").textContent=focusStepIndex === focusTask.steps.length-1
+        ? "Complete task"
+        : "Complete step";
+    } else {
+      $("focusStep").textContent=`${focusTask.duration} minute focus`;
+      $("focusTitle").textContent=focusTask.name;
+      $("finishNow").textContent="Complete task";
+    }
+  }
+
+  function updateTimer(){
+    $("timerText").textContent=`${pad(Math.floor(remaining/60))}:${pad(remaining%60)}`;
+    $("timerProgress").style.width=(100*(1-remaining/total))+"%";
+  }
+
+  function finishCurrentStep(){
+    if(!focusTask) return;
+
+    if(focusTask.steps && focusTask.steps.length){
+      if(focusStepIndex < focusTask.steps.length-1){
+        focusStepIndex++;
+        const next=currentFocusStep();
+        remaining=Math.max(60,Number(next.duration)*60);
+        total=remaining;
+        updateFocusHeader();
+        updateTimer();
+        showToast(`Step ${focusStepIndex+1} of ${focusTask.steps.length}`);
+      } else {
+        completeFocus();
+      }
+    } else {
+      completeFocus();
+    }
+  }
+
+  function completeFocus(){
+    if(timer){clearInterval(timer);timer=null}
+    if(focusTask){
+      focusTask.done=true;
+      saveTasks();
+      renderTasks();
+    }
+    showToast("Task complete. One small win.");
+    focusTask=null;
+    setTimeout(()=>showScreen("home"),500);
+  }
+
+  $("pause").onclick=()=>{
+    if(timer){
+      clearInterval(timer);
+      timer=null;
+      $("pause").textContent="▶";
+      return;
+    }
+
+    $("pause").textContent="Ⅱ";
+    timer=setInterval(()=>{
+      remaining--;
+      updateTimer();
+
+      if(remaining<=0){
+        clearInterval(timer);
+        timer=null;
+        $("pause").textContent="▶";
+        finishCurrentStep();
+      }
+    },1000);
+  };
+
+  $("minus").onclick=()=>{remaining=Math.max(60,remaining-300);updateTimer()};
+  $("plus").onclick=()=>{remaining+=300;total=Math.max(total,remaining);updateTimer()};
+  function completeFocus(){
+    if(focusTask){focusTask.done=true;saveTasks();renderTasks();}
+    focusTask=null;
+    pausedFocus=null;
+    try{localStorage.removeItem("adhdAppPausedFocus_v1");}catch(e){}
+    showToast("Timer complete. One small win.");
+    setTimeout(()=>showScreen("home"),400);
+  }
+  $("finishNow").onclick=()=>{if(timer){clearInterval(timer);timer=null;$("pause").textContent="▶"}finishCurrentStep()};
+  $("closeFocus").onclick=()=>{if(timer){clearInterval(timer);timer=null}$("pause").textContent="▶";focusStepIndex=0;showScreen("home")};
+  $("breakFromFocus").onclick=()=>{
+    if(!focusTask || focusTask.done){ showToast("There is no active timer to pause."); return; }
+    if(timer){clearInterval(timer);timer=null}
+    $("pause").textContent="▶";
+    pausedFocus={taskId:focusTask.id,stepIndex:focusStepIndex,remaining:remaining,total:total};
+    try{localStorage.setItem("adhdAppPausedFocus_v1",JSON.stringify(pausedFocus));}catch(e){}
+    showScreen("break");
+  };
+  $("returnToFocus").onclick=()=>{
+    if(!focusTask || focusTask.done){
+      if(pausedFocus){
+        const restored=tasks.find(t=>t.id===pausedFocus.taskId);
+        if(restored && !restored.done){
+          focusTask=restored;
+          focusStepIndex=Number(pausedFocus.stepIndex||0);
+          remaining=Number(pausedFocus.remaining||0);
+          total=Number(pausedFocus.total||remaining);
+        }
+      }
+    }
+    if(!focusTask || focusTask.done || remaining<=0){
+      showScreen("break"); showToast("No paused timer."); return;
+    }
+    showScreen("focus");
+    updateFocusHeader();
+    updateTimer();
+    $("pause").textContent="▶";
+  };
+
+  function renderRoutines(filter){
+    document.querySelectorAll("#routineFilter .choice").forEach(b=>b.classList.toggle("selected",b.dataset.f===filter));
+    const list=routines.filter(r=>r.freq===filter);
+    $("routineList").innerHTML=list.length ? list.map(r=>`<div class="routine">
+      <span style="font-size:22px">${r.icon||"↻"}</span>
+      <div><b>${escapeHtml(r.name)}</b><div class="meta">${r.duration} min · ${r.freq}${r.startDate?" · from "+formatTaskDate(r.startDate):""}</div></div>
+      <div class="routine-actions"><button class="add" data-action="add" data-id="${r.id}">+</button><button data-action="delete" data-id="${r.id}">×</button></div>
+    </div>`).join("") : '<div class="routine-empty">No routines here yet.<br>Add one. Humanity survives another recurring task.</div>';
+    $("routineList").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      const r=routines.find(x=>String(x.id)===String(b.dataset.id)); if(!r)return;
+      if(b.dataset.action==="delete"){
+        routines=routines.filter(x=>String(x.id)!==String(r.id)); saveRoutines(); renderRoutines(filter); showToast("Routine deleted."); return;
+      }
+      tasks.push({id:Date.now(),name:r.name,duration:Number(r.duration),done:false,taskDate:todayISO()});
+      saveTasks();renderTasks();showToast("Routine added to Today.");
+    });
+  }
+
+  document.querySelectorAll("#routineFilter .choice").forEach(b=>b.onclick=()=>renderRoutines(b.dataset.f));
+  $("routineAdd").onclick=()=>{
+    $("routineName").value=""; $("routineDuration").value="15"; $("routineFreq").value="Daily"; $("routineStart").value=todayISO();
+    $("routineSheet").classList.add("show");
+  };
+  function closeRoutine(){$("routineSheet").classList.remove("show")}
+  $("closeRoutine").onclick=closeRoutine; $("cancelRoutine").onclick=closeRoutine;
+  $("saveRoutine").onclick=()=>{
+    const name=$("routineName").value.trim(), duration=Number($("routineDuration").value);
+    if(!name){showToast("Add a routine name first.");return}
+    if(!duration || duration<1){showToast("Duration must be at least 1 minute.");return}
+    routines.push({id:Date.now(),name,icon:"↻",freq:$("routineFreq").value,duration,startDate:$("routineStart").value||todayISO()});
+    saveRoutines(); closeRoutine(); renderRoutines($("routineFreq").value); showToast("Routine added.");
+  };
+
+  function renderCalendar(){
+    const d=new Date(2026,9,6); $("monthTitle").textContent=d.toLocaleDateString(undefined,{month:"long"});
+    const first=new Date(2026,9,1).getDay(), days=new Date(2026,10,0).getDate();
+    $("dates").innerHTML="";
+    for(let i=0;i<first;i++)$("dates").appendChild(document.createElement("div"));
+    for(let n=1;n<=days;n++){const c=document.createElement("div");c.className="date-cell"+(n===6?" today":"");c.textContent=n;$("dates").appendChild(c)}
+    $("events").innerHTML=events.length?events.map(e=>`<div class="event"><b>${escapeHtml(e.name)}</b><br><span class="meta">${e.date} · ${e.time||"Any time"} · ${e.repeat}</span></div>`).join(""):'<div class="event" style="color:#777">No future tasks scheduled yet.</div>';
+  }
+  $("calendarAdd").onclick=()=>$("calendarSheet").classList.add("show");
+  $("cancelCalendar").onclick=()=>$("calendarSheet").classList.remove("show");
+  $("saveCalendar").onclick=()=>{
+    const name=$("calTask").value.trim();if(!name){showToast("Add a task name first.");return}
+    events.push({name,date:$("calDate").value||"Unspecified date",time:$("calTime").value,repeat:$("calRepeat").value});
+    $("calendarSheet").classList.remove("show");renderCalendar();showToast("Scheduled.");
+    $("calTask").value="";
+  };
+  const WORDLE_WORDS=[
+    "apple","brave","cabin","candy","chair","charm","clean","cloud","dance","dream",
+    "eagle","earth","flame","flock","focus","fresh","giant","grape","green","happy",
+    "heart","house","light","magic","maple","money","music","ocean","peace","plant",
+    "quiet","river","smile","smart","space","spark","stone","sugar","table","tiger",
+    "toast","train","trust","water","whale","world","young"
+  ];
+  const WORDLE_KEYS=["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
+  let wordleAnswer="",wordleRow=0,wordleGuess="",wordleOver=false;
+  const wordleKeyState={};
+
+  function startWordle(){
+    wordleAnswer=WORDLE_WORDS[Math.floor(Math.random()*WORDLE_WORDS.length)];
+    wordleRow=0;wordleGuess="";wordleOver=false;
+    window.wordleHistory=[];
+    window.wordleResults=[];
+    Object.keys(wordleKeyState).forEach(k=>delete wordleKeyState[k]);
+    renderWordle();
+    $("wordleSheet").classList.add("show");
+  }
+
+  function renderWordle(){
+    const board=$("wordleBoard");
+    board.innerHTML="";
+    for(let r=0;r<6;r++){
+      const row=document.createElement("div");row.className="wordle-row";
+      for(let c=0;c<5;c++){
+        const tile=document.createElement("div");tile.className="wordle-tile";
+        const letter=r<wordleRow ? (window.wordleHistory?.[r]?.[c]||"") : (r===wordleRow ? wordleGuess[c]||"" : "");
+        tile.textContent=letter;
+        if(letter)tile.classList.add("filled");
+        if(r<wordleRow && window.wordleHistory?.[r]){
+          const result=window.wordleResults?.[r]?.[c];
+          if(result)tile.classList.add(result);
+        }
+        row.appendChild(tile);
+      }
+      board.appendChild(row);
+    }
+    $("wordleStatus").textContent=wordleOver
+      ? (window.wordleHistory?.[wordleRow-1]===wordleAnswer ? "Solved! Nice little brain stretch." : `The word was ${wordleAnswer.toUpperCase()}.`)
+      : "Type a 5-letter word.";
+    $("newWordle").style.display=wordleOver?"block":"none";
+    renderWordleKeyboard();
+  }
+
+  function renderWordleKeyboard(){
+    const kb=$("wordleKeyboard");
+    kb.innerHTML="";
+
+    const keyboardState={};
+    const priority={absent:0,present:1,correct:2};
+    const history=window.wordleHistory||[];
+    const results=window.wordleResults||[];
+
+    history.forEach((guess,rowIndex)=>{
+      if(!guess || !results[rowIndex]) return;
+      guess.split("").forEach((letter,i)=>{
+        const ch=letter.toUpperCase();
+        const state=results[rowIndex][i];
+        if(!keyboardState[ch] || priority[state] > priority[keyboardState[ch]]){
+          keyboardState[ch]=state;
+        }
+      });
+    });
+
+    const keyColors={
+      correct:{background:"#2f9e44",color:"#fff"},
+      present:{background:"#e0ad00",color:"#fff"},
+      absent:{background:"#bdbdbd",color:"#fff"}
+    };
+
+    WORDLE_KEYS.forEach((letters,i)=>{
+      const row=document.createElement("div");
+      row.className="wordle-keyrow";
+
+      if(i===2){
+        const enter=document.createElement("button");
+        enter.type="button";
+        enter.className="wordle-key wide";
+        enter.textContent="ENTER";
+        enter.onclick=submitWordle;
+        row.appendChild(enter);
+      }
+
+      letters.split("").forEach(ch=>{
+        const b=document.createElement("button");
+        b.type="button";
+        b.className="wordle-key";
+        const state=keyboardState[ch.toUpperCase()];
+        if(state && keyColors[state]){
+          b.style.backgroundColor=keyColors[state].background;
+          b.style.color=keyColors[state].color;
+          b.style.borderColor=keyColors[state].background;
+        }
+        b.textContent=ch;
+        b.onclick=()=>addWordleLetter(ch);
+        row.appendChild(b);
+      });
+
+      if(i===2){
+        const back=document.createElement("button");
+        back.type="button";
+        back.className="wordle-key wide";
+        back.textContent="⌫";
+        back.onclick=()=>{
+          if(!wordleOver){
+            wordleGuess=wordleGuess.slice(0,-1);
+            renderWordle();
+          }
+        };
+        row.appendChild(back);
+      }
+      kb.appendChild(row);
+    });
+  }
+  function addWordleLetter(ch){
+    if(wordleOver||wordleGuess.length>=5)return;
+    wordleGuess+=ch.toLowerCase();renderWordle();
+  }
+
+  function submitWordle(){
+    if(wordleOver)return;
+    if(wordleGuess.length!==5){$("wordleStatus").textContent="Need 5 letters.";return;}
+    window.wordleHistory=window.wordleHistory||[];
+    window.wordleResults=window.wordleResults||[];
+    const result=[];
+    const answerChars=wordleAnswer.split("");
+    const used=[false,false,false,false,false];
+    for(let i=0;i<5;i++){
+      if(wordleGuess[i]===answerChars[i]){result[i]="correct";used[i]=true;}
+      else result[i]="absent";
+    }
+    for(let i=0;i<5;i++){
+      if(result[i]==="correct")continue;
+      for(let j=0;j<5;j++){
+        if(!used[j]&&wordleGuess[i]===answerChars[j]){
+          result[i]="present";used[j]=true;break;
+        }
+      }
+    }
+    window.wordleHistory[wordleRow]=wordleGuess;
+    window.wordleResults[wordleRow]=result;
+    for(let i=0;i<5;i++){
+      const ch=wordleGuess[i].toUpperCase();
+      const state=result[i];
+      const priority={absent:0,present:1,correct:2};
+      if(!wordleKeyState[ch] || priority[state] > priority[wordleKeyState[ch]]){
+        wordleKeyState[ch]=state;
+      }
+    }
+    const solved=wordleGuess===wordleAnswer;
+    wordleRow++;
+    if(solved||wordleRow>=6){wordleOver=true}
+    else wordleGuess="";
+    renderWordle();
+  }
+
+  document.addEventListener("keydown",e=>{
+    if(!$("wordleSheet").classList.contains("show")||wordleOver)return;
+    if(/^[a-zA-Z]$/.test(e.key))addWordleLetter(e.key.toUpperCase());
+    else if(e.key==="Backspace"){wordleGuess=wordleGuess.slice(0,-1);renderWordle();}
+    else if(e.key==="Enter")submitWordle();
+  });
+  $("closeWordle").onclick=(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    $("wordleSheet").classList.remove("show");
+  };
+  $("newWordle").onclick=(e)=>{
+    e.preventDefault();
+    startWordle();
+  };
+
+  // Prevent Safari's double-tap zoom while interacting with Wordle.
+  let lastWordleTap=0;
+  $("wordleSheet").addEventListener("touchend",(e)=>{
+    const now=Date.now();
+    if(now-lastWordleTap<350){
+      e.preventDefault();
+    }
+    lastWordleTap=now;
+  },{passive:false});
+
+  document.querySelectorAll(".break-card").forEach(b=>b.onclick=()=>{
+    const label=b.querySelector("b").textContent;
+    if(b.dataset.requiresComplete==="true" && !todayTaskStatus().allDone){
+      showToast(todayTaskStatus().hasTasks
+        ? `Finish today’s tasks to unlock ${label}.`
+        : `Add today’s tasks before unlocking ${label}.`);
+      return;
+    }
+    if(label==="Wordle"){startWordle();return;}
+    if(label==="Doodle" && typeof startDoodle==="function"){startDoodle();return;}
+    showToast(`${label} · ${b.dataset.min} min break started.`);
+  });
+  $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();showToast("Completed tasks cleared.");};
+})();
+</script>
+</body>
+</html>
